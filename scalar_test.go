@@ -64,6 +64,9 @@ func TestParseValue(t *testing.T) {
 
 	// MAC addresses
 	assertParse(t, net.HardwareAddr("\x01\x23\x45\x67\x89\xab"), "01:23:45:67:89:ab")
+
+	// MAC addresses
+	assertParse(t, net.HardwareAddr("\x01\x23\x45\x67\x89\xab"), "01:23:45:67:89:ab")
 }
 
 func TestParse(t *testing.T) {
