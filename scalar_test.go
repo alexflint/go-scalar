@@ -14,13 +14,13 @@ func assertParse(t *testing.T, expected interface{}, str string) {
 	v := reflect.New(reflect.TypeOf(expected)).Elem()
 	err := ParseValue(v, str)
 	if assert.NoError(t, err) {
-		assert.Equal(t, expected, v)
+		assert.Equal(t, expected, v.Interface())
 	}
 
 	ptr := reflect.New(reflect.PtrTo(reflect.TypeOf(expected))).Elem()
 	err = ParseValue(ptr, str)
 	if assert.NoError(t, err) {
-		assert.Equal(t, expected, ptr.Elem())
+		assert.Equal(t, expected, ptr.Elem().Interface())
 	}
 
 	assert.True(t, CanParse(v.Type()))
