@@ -47,6 +47,13 @@ func ParseValue(v reflect.Value, s string) error {
 	if scalar, ok := v.Interface().(encoding.TextUnmarshaler); ok {
 		return scalar.UnmarshalText([]byte(s))
 	}
+	// If it's a value instead of a pointer, check that we can unmarshal it
+	// via TextUnmarshaler as well
+	if v.CanAddr() {
+		if scalar, ok := v.Addr().Interface().(encoding.TextUnmarshaler); ok {
+			return scalar.UnmarshalText([]byte(s))
+		}
+	}
 
 	// If we have a pointer then dereference it
 	if v.Kind() == reflect.Ptr {
@@ -126,7 +133,7 @@ func ParseValue(v reflect.Value, s string) error {
 // CanParse returns true if the type can be parsed from a string.
 func CanParse(t reflect.Type) bool {
 	// If it implements encoding.TextUnmarshaler then use that
-	if t.Implements(textUnmarshalerType) {
+	if t.Implements(textUnmarshalerType) || reflect.PtrTo(t).Implements(textUnmarshalerType) {
 		return true
 	}
 
