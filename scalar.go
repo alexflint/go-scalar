@@ -18,7 +18,6 @@ var (
 	textUnmarshalerType = reflect.TypeOf([]encoding.TextUnmarshaler{}).Elem()
 	durationType        = reflect.TypeOf(time.Duration(0))
 	mailAddressType     = reflect.TypeOf(mail.Address{})
-	ipType              = reflect.TypeOf(net.IP{})
 	macType             = reflect.TypeOf(net.HardwareAddr{})
 )
 
@@ -80,13 +79,6 @@ func ParseValue(v reflect.Value, s string) error {
 		}
 		v.Set(reflect.ValueOf(*addr))
 		return nil
-	case net.IP:
-		ip := net.ParseIP(s)
-		if ip == nil {
-			return fmt.Errorf(`invalid IP address: "%s"`, s)
-		}
-		v.Set(reflect.ValueOf(ip))
-		return nil
 	case net.HardwareAddr:
 		ip, err := net.ParseMAC(s)
 		if err != nil {
@@ -144,7 +136,7 @@ func CanParse(t reflect.Type) bool {
 
 	// Check for other special types
 	switch t {
-	case durationType, mailAddressType, ipType, macType:
+	case durationType, mailAddressType, macType:
 		return true
 	}
 
