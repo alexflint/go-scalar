@@ -77,7 +77,6 @@ func ParseValue(v reflect.Value, s string) error {
 	}
 
 	// If it implements encoding.TextUnmarshaler then use that
-	fmt.Println("attempt 1...")
 	if matched, err := parseAsTextUnmarshaler(v, s); matched {
 		return err
 	}
@@ -85,8 +84,7 @@ func ParseValue(v reflect.Value, s string) error {
 	// If it's a value instead of a pointer, check that we can unmarshal it
 	// via TextUnmarshaler as well
 	if v.CanAddr() {
-		fmt.Println("attempt 2...")
-		if matched, err := parseAsTextUnmarshaler(v, s); matched {
+		if matched, err := parseAsTextUnmarshaler(v.Addr(), s); matched {
 			return err
 		}
 	}
