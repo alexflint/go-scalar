@@ -37,8 +37,6 @@ func parseAsTextUnmarshaler(v reflect.Value, s string) (bool, error) {
 		return false, nil
 	}
 
-	fmt.Printf("parsing into %v: IsNil=%v, CanSet=%v, Kind=%v\n", t, v.IsNil(), v.CanSet(), t.Kind())
-
 	if v.IsNil() && v.CanSet() {
 		switch t.Kind() {
 		case reflect.Ptr:
