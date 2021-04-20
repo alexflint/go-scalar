@@ -31,6 +31,42 @@ func Parse(dest interface{}, s string) error {
 	return ParseValue(reflect.ValueOf(dest), s)
 }
 
+func parseAsTextUnmarshaler(v reflect.Value, s string) (bool, error) {
+	t := v.Type()
+	if !t.Implements(textUnmarshalerType) {
+		return false, nil
+	}
+
+	fmt.Printf("parsing into %v: IsNil=%v, CanSet=%v, Kind=%v\n", t, v.IsNil(), v.CanSet(), t.Kind())
+
+	if v.IsNil() && v.CanSet() {
+		switch t.Kind() {
+		case reflect.Ptr:
+			v.Set(reflect.New(v.Type().Elem()))
+		case reflect.Slice:
+			v.Set(reflect.MakeSlice(t, 0, 0))
+		case reflect.Map:
+			v.Set(reflect.MakeMap(t))
+		case reflect.Chan:
+			v.Set(reflect.MakeChan(t, 0))
+		}
+	}
+
+	if !v.IsNil() && t.Kind() == reflect.Ptr {
+		switch t.Elem().Kind() {
+		case reflect.Slice:
+			v.Elem().Set(reflect.MakeSlice(t.Elem(), 0, 0))
+		case reflect.Map:
+			v.Elem().Set(reflect.MakeMap(t.Elem()))
+		case reflect.Chan:
+			v.Elem().Set(reflect.MakeChan(t.Elem(), 0))
+		}
+	}
+
+	err := v.Interface().(encoding.TextUnmarshaler).UnmarshalText([]byte(s))
+	return true, err
+}
+
 // ParseValue assigns a value to v by parsing s.
 func ParseValue(v reflect.Value, s string) error {
 	// If we have a nil pointer then allocate a new object
@@ -43,14 +79,17 @@ func ParseValue(v reflect.Value, s string) error {
 	}
 
 	// If it implements encoding.TextUnmarshaler then use that
-	if scalar, ok := v.Interface().(encoding.TextUnmarshaler); ok {
-		return scalar.UnmarshalText([]byte(s))
+	fmt.Println("attempt 1...")
+	if matched, err := parseAsTextUnmarshaler(v, s); matched {
+		return err
 	}
+
 	// If it's a value instead of a pointer, check that we can unmarshal it
 	// via TextUnmarshaler as well
 	if v.CanAddr() {
-		if scalar, ok := v.Addr().Interface().(encoding.TextUnmarshaler); ok {
-			return scalar.UnmarshalText([]byte(s))
+		fmt.Println("attempt 2...")
+		if matched, err := parseAsTextUnmarshaler(v, s); matched {
+			return err
 		}
 	}
 

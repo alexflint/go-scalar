@@ -87,3 +87,39 @@ func TestParse(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 123, v)
 }
+
+type sliceUnmarshaler []int
+
+func (sliceUnmarshaler) UnmarshalText(b []byte) error {
+	return nil
+}
+
+type mapUnmarshaler map[string]string
+
+func (m mapUnmarshaler) UnmarshalText(b []byte) error {
+	m["a"] = string(b)
+	return nil
+}
+
+type chanUnmarshaler chan string
+
+func (ch chanUnmarshaler) UnmarshalText(b []byte) error {
+	return nil
+}
+
+func TestParseReferenceTypes(t *testing.T) {
+	var err error
+
+	var s sliceUnmarshaler
+	err = Parse(&s, "test1")
+	require.NoError(t, err)
+
+	var m mapUnmarshaler
+	err = Parse(&m, "test2")
+	require.NoError(t, err)
+	assert.Equal(t, "test2", m["a"])
+
+	var c chanUnmarshaler
+	err = Parse(&c, "test3")
+	require.NoError(t, err)
+}
