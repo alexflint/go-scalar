@@ -2,6 +2,7 @@ package scalar
 
 import (
 	"net"
+	"net/url"
 	"reflect"
 	"testing"
 	"time"
@@ -76,6 +77,9 @@ func TestParseValue(t *testing.T) {
 
 	// MAC addresses
 	assertParse(t, net.HardwareAddr("\x01\x23\x45\x67\x89\xab"), "01:23:45:67:89:ab")
+
+	// URL
+	assertParse(t, url.URL{Scheme: "https", Host: "example.com", Path: "/a/b/c"}, "https://example.com/a/b/c")
 
 	// custom text unmarshaler
 	assertParse(t, textUnmarshaler{3}, "abc")
