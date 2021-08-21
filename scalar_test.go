@@ -2,6 +2,7 @@ package scalar
 
 import (
 	"net"
+	"net/mail"
 	"net/url"
 	"reflect"
 	"testing"
@@ -72,6 +73,9 @@ func TestParseValue(t *testing.T) {
 	// IP addresses
 	assertParse(t, net.IPv4(1, 2, 3, 4), "1.2.3.4")
 
+	// email addresses
+	assertParse(t, mail.Address{Address: "joe@example.com"}, "joe@example.com")
+
 	// MAC addresses
 	assertParse(t, net.HardwareAddr("\x01\x23\x45\x67\x89\xab"), "01:23:45:67:89:ab")
 
@@ -85,9 +89,73 @@ func TestParseValue(t *testing.T) {
 	assertParse(t, textUnmarshaler{3}, "abc")
 }
 
+func TestParseErrors(t *testing.T) {
+	var err error
+
+	// this should fail because the pointer is nil and will not be settable
+	var p *int
+	err = ParseValue(reflect.ValueOf(p), "123")
+	assert.Equal(t, errPtrNotSettable, err)
+
+	// this should fail because the value will not be settable
+	var v int
+	err = ParseValue(reflect.ValueOf(v), "123")
+	assert.Equal(t, errNotSettable, err)
+
+	// this should fail due to a malformed boolean
+	var b bool
+	err = ParseValue(reflect.ValueOf(&b), "malformed")
+	assert.Error(t, err)
+
+	// this should fail due to a malformed boolean
+	var i int
+	err = ParseValue(reflect.ValueOf(&i), "malformed")
+	assert.Error(t, err)
+
+	// this should fail due to a malformed boolean
+	var u uint
+	err = ParseValue(reflect.ValueOf(&u), "malformed")
+	assert.Error(t, err)
+
+	// this should fail due to a malformed boolean
+	var f float64
+	err = ParseValue(reflect.ValueOf(&f), "malformed")
+	assert.Error(t, err)
+
+	// this should fail due to a malformed time duration
+	var d time.Duration
+	err = ParseValue(reflect.ValueOf(&d), "malfomed")
+	assert.Error(t, err)
+
+	// this should fail due to a malformed email address
+	var email mail.Address
+	err = ParseValue(reflect.ValueOf(&email), "malfomed")
+	assert.Error(t, err)
+
+	// this should fail due to a malformed time duration
+	var mac net.HardwareAddr
+	err = ParseValue(reflect.ValueOf(&mac), "malfomed")
+	assert.Error(t, err)
+
+	// this should fail due to a malformed time duration
+	var url url.URL
+	err = ParseValue(reflect.ValueOf(&url), "$:")
+	assert.Error(t, err)
+
+	// this should fail due to an unsupported type
+	var x struct{}
+	err = ParseValue(reflect.ValueOf(&x), "$")
+	assert.Error(t, err)
+}
+
 func TestParse(t *testing.T) {
 	var v int
 	err := Parse(&v, "123")
 	require.NoError(t, err)
 	assert.Equal(t, 123, v)
+}
+
+func TestCanParseReturnsFalse(t *testing.T) {
+	var x struct{}
+	assert.Equal(t, false, CanParse(reflect.TypeOf(x)))
 }
