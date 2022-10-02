@@ -48,6 +48,7 @@ func TestParseValue(t *testing.T) {
 
 	// integers
 	assertParse(t, int(123), "123")
+	assertParse(t, int(123), "1_2_3")
 	assertParse(t, int8(123), "123")
 	assertParse(t, int16(123), "123")
 	assertParse(t, int32(123), "123")
@@ -55,6 +56,7 @@ func TestParseValue(t *testing.T) {
 
 	// unsigned integers
 	assertParse(t, uint(123), "123")
+	assertParse(t, uint(123), "1_2_3")
 	assertParse(t, byte(123), "123")
 	assertParse(t, uint8(123), "123")
 	assertParse(t, uint16(123), "123")
