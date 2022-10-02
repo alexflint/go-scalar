@@ -15,12 +15,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ['1.17', '1.18', '1.19', '']
+        go: ['1.17', '1.18', '1.19']
 
     steps:
     - id: go
       name: Set up Go
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go }}
 
