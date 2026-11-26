@@ -44,6 +44,10 @@ func ParseValue(v reflect.Value, s string) error {
 		v.Set(reflect.New(v.Type().Elem()))
 	}
 
+	if !v.IsValid() || !v.CanInterface() {
+		return errNotSettable
+	}
+
 	// If it implements encoding.TextUnmarshaler then use that
 	if scalar, ok := v.Interface().(encoding.TextUnmarshaler); ok {
 		return scalar.UnmarshalText([]byte(s))
