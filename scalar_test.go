@@ -161,3 +161,43 @@ func TestCanParseReturnsFalse(t *testing.T) {
 	var x struct{}
 	assert.Equal(t, false, CanParse(reflect.TypeOf(x)))
 }
+
+func TestParseInaccessibleValues(t *testing.T) {
+	number := 7
+	fields := struct {
+		number  int
+		pointer *int
+		nilPtr  *int
+	}{number: 42, pointer: &number}
+	v := reflect.ValueOf(&fields).Elem()
+	tests := []struct {
+		name  string
+		parse func() error
+		want  error
+	}{
+		{"nil destination", func() error { return Parse(nil, "123") }, errNotSettable},
+		{"invalid value", func() error { return ParseValue(reflect.Value{}, "123") }, errNotSettable},
+		{"unexported value", func() error { return ParseValue(v.Field(0), "123") }, errNotSettable},
+		{"unexported pointer", func() error { return ParseValue(v.Field(1), "123") }, errNotSettable},
+		{"unexported nil pointer", func() error { return ParseValue(v.Field(2), "123") }, errPtrNotSettable},
+		{"typed nil pointer", func() error { return Parse((*int)(nil), "123") }, errPtrNotSettable},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.NotPanics(t, func() {
+				assert.Equal(t, tt.want, tt.parse())
+			})
+		})
+	}
+	assert.Equal(t, 42, fields.number)
+	assert.Equal(t, 7, number)
+	assert.Nil(t, fields.nilPtr)
+}
+
+func TestParseNonSettableTextUnmarshaler(t *testing.T) {
+	var dest textUnmarshaler
+	v := reflect.ValueOf(&dest)
+	assert.False(t, v.CanSet())
+	require.NoError(t, ParseValue(v, "abc"))
+	assert.Equal(t, 3, dest.val)
+}
